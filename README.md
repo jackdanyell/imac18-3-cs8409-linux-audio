@@ -665,14 +665,21 @@ The kernel-derived portions of this project retain their respective copyright an
 
 Please preserve the original copyright notices when modifying or redistributing the source.
 
+Huge credit to the original snd_hda_macbookpro / CS8409 work that made this possible.
+
 ---
 
-# Disclaimer
 
-This is community-developed kernel driver software.
+# :warning: Disclaimer
 
-Installing an out-of-tree kernel module modifies the Linux kernel module stack and may taint the kernel.
+Use this fix at your own risk.
 
-Use at your own risk.
+This project installs an out-of-tree kernel module and modifies the Linux audio driver stack. Kernel modules can potentially cause system instability, audio problems, or boot issues if something goes wrong.
 
-Always keep a working kernel available so that you can boot into it if a future kernel update causes a regression.
+The driver has been tested successfully on an iMac18,3 running EndeavourOS with kernel 6.18.43-1-lts, but it has not been tested on every hardware configuration or kernel version.
+
+Before installing, make sure you have a working kernel available as a fallback.
+
+I cannot guarantee that this fix will work on your system, and I am not responsible for any damage, data loss, system instability, or other problems resulting from its use.
+
+If you’re unsure, please read the installation instructions carefully and keep a backup before proceeding.
