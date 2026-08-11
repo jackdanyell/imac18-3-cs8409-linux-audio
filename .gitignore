@@ -1,0 +1,17 @@
+# Build artifacts
+build/
+*.o
+*.ko
+*.ko.zst
+*.mod
+*.mod.c
+Module.symvers
+modules.order
+
+# DKMS / temporary files
+dkms-build/
+*.log
+
+# Editor / OS files
+.DS_Store
+*~
