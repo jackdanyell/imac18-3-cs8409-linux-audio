@@ -42,14 +42,6 @@ if [ $major_version -lt 6 -o \( $major_version -eq 6 -a $minor_version -lt 17 \)
 	exec ./install.cirrus.driver.pre617.sh $script_arguments_pre617
 fi
 
-if [ -e dkms.conf.orig ]; then
-    sed -i 's/^BUILT_MODULE_NAME\[0\].*$/BUILT_MODULE_NAME[0]="snd-hda-codec-cs8409"/' dkms.conf
-else
-    sed -i.orig 's/^BUILT_MODULE_NAME\[0\].*$/BUILT_MODULE_NAME[0]="snd-hda-codec-cs8409"/' dkms.conf
-fi
-sed -i 's/^BUILT_MODULE_LOCATION\[0\].*$/BUILT_MODULE_LOCATION[0]="build\/hda\/codecs\/cirrus"/' dkms.conf
-sed -i 's/^PRE_BUILD.*$/PRE_BUILD="install.cirrus.driver.sh -k $kernelver --dkms"/' dkms.conf
-
 PATCH_CIRRUS=false
 
 if [[ $dkms_action == 'install' ]]; then
@@ -118,7 +110,7 @@ else
 	echo "please install the appropriate linux kernel headers package:"
 	echo "Debian/Ubuntu: sudo apt install linux-headers-${UNAME}"
 	echo "Fedora: sudo dnf install kernel-headers"
-	echo "Arch (also Manjaro): Linux: sudo pacman -S linux-headers"
+	echo "Arch / EndeavourOS: sudo pacman -S linux-headers   # and/or linux-lts-headers"
 	echo "Void Linux: xbps-install -S linux-headers"
 
 	exit 1
@@ -231,6 +223,8 @@ cp $patch_dir/patch_cirrus_real84_i2c.h $hda_dir/codecs/cirrus
 pushd $hda_dir > /dev/null
 # define the ubuntu/mainline versions that work at the moment
 # for ubuntu allow a range of revisions that work
+# HDA layout from kernel 6.17 is the patch baseline. 6.18 LTS and 7.x are newer
+# but use the same patches (with hunk offsets). iscurrent>1 only prints a warning.
 current_major=6
 current_minor=17
 current_minor_ubuntu=6

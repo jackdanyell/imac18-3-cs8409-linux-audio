@@ -1,12 +1,11 @@
 #!/bin/bash
 
-src_dir='/usr/src/snd_hda_macbookpro-0.1'
+src_dir='/usr/src/snd_hda_macbookpro-0.2'
 module_name='snd-hda-codec-cs8409'
-dkms_name='snd_hda_macbookpro/0.1'
+dkms_name='snd_hda_macbookpro/0.2'
 var_dkms_dir='/var/lib/dkms/snd_hda_macbookpro'
 cur_dir=$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
 
-# specify uninstall with the -r or -u argument
 while getopts :ru arg
 do
     case "${arg}" in
@@ -16,29 +15,43 @@ do
 done
 
 if [[ $dkms_remove = true ]]; then
-
-    # we need this to ensure the original kernel module is restored
-    # before we remove the whole /var/lib/dkms/snd_hda_macbookpro directory tree below
-    # (which we dont need to do if we do the dkms remove)
-    dkms remove $dkms_name
-
-    # we dont need this if we do the above - the whole dkms module tree is removed by the above command
-    # (in addition to restoring the original module)
-    #[[ -e $var_dkms_dir ]] && rm -rf $var_dkms_dir && echo "removed $var_dkms_dir"
-
-    # we do need to remove the symbolic link created manually below
-    [[ -e $src_dir ]] && rm -f $src_dir && echo "removed $src_dir"
-
+    dkms remove "$dkms_name" --all || true
+    [[ -e $src_dir ]] && rm -f "$src_dir" && echo "removed $src_dir"
     exit 0
 fi
 
-pushd $cur_dir > /dev/null
+pushd "$cur_dir" > /dev/null
 
-# create the symbolic link for source dkms seems to require
-[[ ! -e $src_dir ]] && ln -sfn $cur_dir $src_dir
+# Older copies of this project and the AUR package used a different DKMS name/version.
+for old in snd-hda-macbookpro/0.1 snd_hda_macbookpro/0.1; do
+    if dkms status -m "${old%/*}" 2>/dev/null | grep -q .; then
+        echo "Removing conflicting DKMS module $old"
+        dkms remove "$old" --all || true
+    fi
+done
 
-# note that this will store the original base kernel module under  /var/lib/dkms
-# and needs dkms remove to be called to restore that original module back to the base kernel modules
-dkms install -c dkms.conf --force -m $dkms_name
+[[ -L /usr/src/snd-hda-macbookpro-0.1 ]] && rm -f /usr/src/snd-hda-macbookpro-0.1
+[[ -L /usr/src/snd_hda_macbookpro-0.1 ]] && rm -f /usr/src/snd_hda_macbookpro-0.1
+[[ -d /usr/src/snd-hda-macbookpro-0.1 ]] && rm -rf /usr/src/snd-hda-macbookpro-0.1
+[[ -e /var/lib/dkms/snd-hda-macbookpro ]] && rm -rf /var/lib/dkms/snd-hda-macbookpro
+
+ln -sfn "$cur_dir" "$src_dir"
+
+installed=0
+for build in /lib/modules/*/build; do
+    [ -e "$build/Makefile" ] || continue
+    kernel=$(basename "$(dirname "$build")")
+    echo
+    echo "DKMS install for kernel $kernel"
+    dkms install -c dkms.conf --force -m snd_hda_macbookpro -v 0.2 -k "$kernel"
+    installed=1
+done
+
+if [ "$installed" -eq 0 ]; then
+    echo "No kernel build trees found under /lib/modules/*/build"
+    echo "Install matching headers, for example:"
+    echo "  sudo pacman -S linux-headers linux-lts-headers"
+    exit 1
+fi
 
 popd > /dev/null

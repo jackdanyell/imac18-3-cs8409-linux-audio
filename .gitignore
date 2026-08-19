@@ -10,6 +10,7 @@ modules.order
 
 # DKMS / temporary files
 dkms-build/
+dkms.conf.orig
 *.log
 
 # Editor / OS files

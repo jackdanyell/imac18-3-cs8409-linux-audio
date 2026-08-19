@@ -53,10 +53,19 @@ if [ "$CODEC_FOUND" -ne 1 ]; then
     exit 1
 fi
 
+if command -v pacman >/dev/null 2>&1; then
+    if pacman -Q snd-hda-macbookpro-dkms-git >/dev/null 2>&1; then
+        echo
+        echo "Removing conflicting AUR package snd-hda-macbookpro-dkms-git"
+        echo "It registers the same module under a different DKMS name."
+        pacman -R --noconfirm snd-hda-macbookpro-dkms-git
+    fi
+fi
+
 echo
 echo "Hardware check: OK"
 echo
-echo "Starting DKMS installation..."
+echo "Installing DKMS module for every kernel that has headers..."
 echo
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"

@@ -19,9 +19,8 @@ This project was developed and tested on:
 | Codec subsystem ID | `0x106b1000`                        |
 | Architecture       | x86_64                              |
 | Tested Linux       | Arch Linux / EndeavourOS            |
-| Tested kernel      | `6.18.43-1-lts`                     |
-| Module             | `snd-hda-codec-cs8409`              |
-| Installation       | DKMS                                |
+| Tested kernels     | `6.18.44-1-lts`, `7.1.8-arch1-3`    |
+| DKMS module        | `snd_hda_macbookpro/0.2`            |
 
 ### Important
 
@@ -40,8 +39,14 @@ Do not assume that a different Mac model is supported simply because it contains
 ### Arch Linux / EndeavourOS
 
 ```bash
-sudo pacman -S --needed git gcc linux-headers make patch wget dkms
+sudo pacman -S --needed git gcc make patch wget dkms
+sudo pacman -S --needed linux-headers          # Arch / EndeavourOS default kernel
+sudo pacman -S --needed linux-lts-headers      # only if you also boot linux-lts
 ```
+
+Install headers for **every kernel you boot**. The installer builds the module for each kernel that has a matching `/lib/modules/<kernel>/build` tree.
+
+If the AUR package `snd-hda-macbookpro-dkms-git` is installed, the installer removes it. That package registers the same `.ko` under a different DKMS name and causes `already installed` errors on kernel updates.
 
 ### Ubuntu / Debian
 
@@ -86,7 +91,7 @@ HDA codec        : CS8409/CS42L83
 
 Hardware check: OK
 
-Starting DKMS installation...
+Installing DKMS module for every kernel that has headers...
 ```
 
 The system may also show an additional HDMI HDA codec such as:
@@ -168,7 +173,7 @@ dkms status | grep snd
 Expected:
 
 ```text
-snd-hda-macbookpro/0.1, <kernel>, x86_64: installed (Original modules exist)
+snd_hda_macbookpro/0.2, <kernel>, x86_64: installed (Original modules exist)
 ```
 
 ---
@@ -280,13 +285,16 @@ The original project therefore contains separate handling for:
 
 The current installer automatically determines the kernel version and selects the appropriate installation path.
 
-The project has been tested on:
+The project has been tested on EndeavourOS with:
 
 ```text
-6.18.43-1-lts
+6.18.44-1-lts
+7.1.8-arch1-3
 ```
 
-Newer kernels should be considered **untested until verified**.
+The installer builds for **every installed kernel that has headers**, so Arch `linux` and `linux-lts` can coexist. Boot whichever kernel you want after install.
+
+Newer kernels than those listed should still often build (HDA sources from 6.17 onward share the same layout) but treat them as unverified until you confirm audio after reboot.
 
 If a future kernel update causes the audio to stop working, boot the previous working kernel first and check:
 
@@ -306,8 +314,8 @@ Example:
 
 ```bash
 sudo tar -czf ~/snd-hda-macbookpro-working-backup.tar.gz \
-    /usr/src/snd-hda-macbookpro-0.1 \
-    /var/lib/dkms/snd-hda-macbookpro \
+    /usr/src/snd_hda_macbookpro-0.2 \
+    /var/lib/dkms/snd_hda_macbookpro \
     /etc/dkms
 ```
 
@@ -324,7 +332,7 @@ ls -lh ~/snd-hda-macbookpro-working-backup.tar.gz
 To remove the DKMS module for the current kernel:
 
 ```bash
-sudo dkms remove snd_hda_macbookpro/0.1 -k "$(uname -r)"
+sudo dkms remove snd_hda_macbookpro/0.2 --all
 ```
 
 Then:
@@ -395,7 +403,7 @@ Distribution-specific kernel source and header requirements may differ.
 For Arch-based systems:
 
 ```bash
-sudo pacman -S --needed gcc linux-headers make patch wget dkms
+sudo pacman -S --needed gcc make patch wget dkms linux-headers linux-lts-headers
 ```
 
 For Ubuntu/Debian:
@@ -496,7 +504,7 @@ Check installed headers.
 On Arch:
 
 ```bash
-pacman -Q linux-headers
+pacman -Q linux-headers linux-lts-headers
 ```
 
 Then:
@@ -514,7 +522,7 @@ sudo dkms autoinstall
 If the build fails, inspect:
 
 ```bash
-sudo find /var/lib/dkms/snd-hda-macbookpro \
+sudo find /var/lib/dkms/snd_hda_macbookpro \
     -type f -name make.log -print
 ```
 
@@ -600,7 +608,7 @@ Community reports continue to show that iMac18,3 users encounter CS8409 audio in
 * CS8409 driver binding
 * analogue audio playback
 * persistence across reboot
-* DKMS-managed installation on kernel `6.18.43-1-lts`
+* DKMS-managed installation on `6.18.44-1-lts` and `7.1.8-arch1-3`
 
 ## Not Yet Fully Verified
 
