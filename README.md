@@ -6,6 +6,8 @@ This project is based on the `snd_hda_macbookpro` driver work by David Jones and
 
 The iMac18,3 is known to expose the CS8409 codec correctly under Linux while the standard driver may fail to initialize the Apple-specific audio path. Community reports also document the same CS8409 audio problem on this model.
 
+**Current release:** [v0.2](https://github.com/jackdanyell/imac18-3-cs8409-linux-audio/releases/tag/v0.2)
+
 ## Tested Hardware
 
 This project was developed and tested on:
@@ -32,53 +34,45 @@ Do not assume that a different Mac model is supported simply because it contains
 
 ---
 
-# Quick Installation
+# Installation
 
-## 1. Install dependencies
+Use this repository on an **iMac18,3**. Do **not** also install the AUR package `snd-hda-macbookpro-dkms-git`; it ships the same module under a different DKMS name and breaks kernel updates. If that package is present, `install-imac18-3.sh` removes it.
 
-### Arch Linux / EndeavourOS
+## Arch Linux / EndeavourOS
+
+Install build tools and **headers for every kernel you actually boot**:
 
 ```bash
 sudo pacman -S --needed git gcc make patch wget dkms
-sudo pacman -S --needed linux-headers          # Arch / EndeavourOS default kernel
-sudo pacman -S --needed linux-lts-headers      # only if you also boot linux-lts
 ```
-
-Install headers for **every kernel you boot**. The installer builds the module for each kernel that has a matching `/lib/modules/<kernel>/build` tree.
-
-If the AUR package `snd-hda-macbookpro-dkms-git` is installed, the installer removes it. That package registers the same `.ko` under a different DKMS name and causes `already installed` errors on kernel updates.
-
-### Ubuntu / Debian
 
 ```bash
-sudo apt install git gcc make patch wget dkms linux-headers-$(uname -r)
+# default Arch / EndeavourOS kernel
+sudo pacman -S --needed linux-headers
 ```
 
-The original driver also supports Fedora and Void Linux. See the distribution-specific instructions below.
+```bash
+# only if linux-lts is installed and you still boot it
+sudo pacman -S --needed linux-lts-headers
+```
 
----
-
-## 2. Clone this repository
+Clone and install:
 
 ```bash
 git clone https://github.com/jackdanyell/imac18-3-cs8409-linux-audio.git
 cd imac18-3-cs8409-linux-audio
-```
-
----
-
-## 3. Run the iMac18,3 installer
-
-```bash
 sudo ./install-imac18-3.sh
 ```
 
-The installer performs two hardware checks before starting the DKMS installation:
+The installer:
 
-1. It verifies that the machine identifies as `iMac18,3`.
-2. It verifies that a CS8409 HDA codec is present.
+1. Confirms the machine is `iMac18,3` and that a CS8409 codec is present.
+2. Removes the conflicting AUR DKMS package if it is installed.
+3. Builds `snd_hda_macbookpro/0.2` for **each** kernel that has headers (`/lib/modules/<kernel>/build`).
 
-A supported system should report something similar to:
+You can keep both `linux` and `linux-lts`. After a successful install, boot either kernel; DKMS should already have a module for both.
+
+Expected hardware check:
 
 ```text
 ==========================================
@@ -94,23 +88,38 @@ Hardware check: OK
 Installing DKMS module for every kernel that has headers...
 ```
 
-The system may also show an additional HDMI HDA codec such as:
+An extra HDMI codec such as `R6xx HDMI` is normal on AMD iMacs.
 
-```text
-HDA codec        : R6xx HDMI
-```
-
-This is normal on iMacs with AMD graphics.
-
----
-
-## 4. Reboot
-
-After the installation completes:
+Then reboot:
 
 ```bash
 sudo reboot
 ```
+
+### Upgrade from 0.1
+
+If you previously installed this repo or the AUR package:
+
+```bash
+cd imac18-3-cs8409-linux-audio
+git pull
+sudo ./install-imac18-3.sh
+sudo reboot
+```
+
+That replaces `snd_hda_macbookpro/0.1` (and the hyphenated AUR name) with `0.2`.
+
+## Ubuntu / Debian
+
+```bash
+sudo apt install git gcc make patch wget dkms linux-headers-$(uname -r)
+git clone https://github.com/jackdanyell/imac18-3-cs8409-linux-audio.git
+cd imac18-3-cs8409-linux-audio
+sudo ./install-imac18-3.sh
+sudo reboot
+```
+
+Fedora and Void are supported by the underlying scripts; see [Supported Distributions](#supported-distributions).
 
 ---
 
